@@ -160,26 +160,29 @@ def call_subprocess(
     if not stdout_only:
         assert proc.stdout
         assert proc.stdin
-        proc.stdin.close()
         # In this mode, stdout and stderr are in the same pipe.
         while True:
             line: str = proc.stdout.readline()
             if not line:
                 break
+            if 'REQUESTING' in line:
+                line_without_newline = line.replace('\n', '')
+                proc.stdout.flush()
+                data = input(f'Package is {line_without_newline}. (y)es or (n)o\n')
+                proc.stdin.write(data+'\n')
+                proc.stdin.flush()
+            else:
+                # Show the line immediately.
+                log_subprocess(line)
             line = line.rstrip()
             all_output.append(line + "\n")
 
-            # Show the line immediately.
-            log_subprocess(line)
-            # Update the spinner.
-            if use_spinner:
-                assert spinner
-                spinner.spin()
         try:
             proc.wait()
         finally:
             if proc.stdout:
                 proc.stdout.close()
+            proc.stdin.close()
         output = "".join(all_output)
     else:
         # In this mode, stdout and stderr are in different pipes.

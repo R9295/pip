@@ -60,6 +60,8 @@ def generate_metadata(
 
     with build_env:
         with open_spinner("Preparing metadata (setup.py)") as spinner:
+            # to beautify
+            print("")
             try:
                 call_subprocess(
                     args,
